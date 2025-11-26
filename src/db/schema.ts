@@ -71,3 +71,93 @@ export const verification = pgTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+
+//---------------------------------------------
+export const communities = pgTable("communities", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  slug: varchar("slug", { length: 120 }).notNull().unique(), // /r/nuxt
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+
+export const communitySubscriptions = pgTable("community_subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  communityId: integer("community_id")
+    .notNull()
+    .references(() => communities.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
+export const posts = pgTable("posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content"),
+  communityId: integer("community_id")
+    .notNull()
+    .references(() => communities.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  postId: integer("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  parentId: integer("parent_id").references(() => comments.id), // optional nested comments
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
+
+export const postVotes = pgTable("post_votes", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  value: integer("value").notNull(), // 1 or -1
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+
+
+export const categories = pgTable("categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+});
+
+
+
+
+export const communityCategories = pgTable("community_categories", {
+  id: serial("id").primaryKey(),
+  communityId: integer("community_id")
+    .notNull()
+    .references(() => communities.id),
+  categoryId: integer("category_id")
+    .notNull()
+    .references(() => categories.id),
+});
+
