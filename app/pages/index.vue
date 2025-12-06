@@ -26,6 +26,13 @@
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="success" class="success">Account created successfully!</p>
   </form>
+ <div>
+ <ul>
+      <li v-for="title in postTitles" :key="title">
+        {{ title }}
+      </li>
+    </ul>
+ </div>
 </template>
 
 <script setup>
@@ -61,6 +68,12 @@ const handleSignUp = async () => {
     isLoading.value = false;
   }
 };
+
+const { data, pending, error : myError } = await useFetch('/api/feed')
+
+const postTitles = computed(() => {
+  return data.value?.map(item => item.post.title) || []
+})
 </script>
 
 <style scoped>
