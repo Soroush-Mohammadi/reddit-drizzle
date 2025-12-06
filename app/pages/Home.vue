@@ -1,9 +1,9 @@
 <template>
 
-  <div class="flex justify-between border-b">
+  <div class="flex justify-between items-center border-b p-1">
     <AtomsLogo />
     <TemplatesAppHeader />
-    <MoleculesAppMenu />
+    <AtomsLoginBtn />
   </div>
   <div class="grid grid-cols-7">
     <div class="bg-red-100">
