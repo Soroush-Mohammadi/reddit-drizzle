@@ -6,8 +6,15 @@ export const useAuthFlowStore = defineStore('authFlow', () => {
   const step = ref(1);
 
   const email = ref('');
+  const username = ref('');
   const password = ref('');
+  const birthDate = ref('');
+  const gender = ref<string | null>('');
   const interests = ref<string[]>([]);
+
+  // modal
+
+  const modal = ref(false);
 
   // ---- ACTIONS ----
   const next = () => step.value++;
@@ -23,6 +30,20 @@ export const useAuthFlowStore = defineStore('authFlow', () => {
     password.value = val;
   };
 
+  const setUsername = (val: string) => {
+    username.value = val;
+  };
+  const setBirthDate = (val: string) => {
+    birthDate.value = val;
+  };
+  const setGender = (val: string | null) => {
+    gender.value = val;
+  };
+
+  const toggleModal = (val: boolean) => {
+    modal.value = val;
+  };
+
   const toggleInterest = (name: string) => {
     if (interests.value.includes(name)) {
       interests.value = interests.value.filter((i) => i !== name);
@@ -35,7 +56,9 @@ export const useAuthFlowStore = defineStore('authFlow', () => {
     console.log('Collected:', {
       email: email.value,
       password: password.value,
-      interests: interests.value
+      interests: interests.value,
+      birthDate: birthDate.value,
+      gender: gender.value
     });
 
     // Example API call:
@@ -51,14 +74,21 @@ export const useAuthFlowStore = defineStore('authFlow', () => {
     email,
     password,
     interests,
+    birthDate,
+    username,
+    modal,
 
     // actions
     next,
     prev,
     goTo,
     setEmail,
+    setUsername,
     setPassword,
+    setGender,
+    setBirthDate,
     toggleInterest,
-    finalizeSignup
+    finalizeSignup,
+    toggleModal
   };
 });

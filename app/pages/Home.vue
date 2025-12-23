@@ -2,7 +2,7 @@
   <div class="flex justify-between items-center border-b p-1">
     <AtomsLogo />
     <TemplatesAppHeader />
-    <AtomsLoginBtn />
+    <AtomsLoginBtn @toggle-modal="onToggleModal" />
   </div>
   <div class="grid grid-cols-7">
     <div class="bg-red-100">
@@ -10,7 +10,7 @@
     </div>
     <div class="col-start-3 col-span-3">
       <TemplatesMainContent />
-      <AuthModal :show="true" />
+      <AuthModal :show="modal" />
     </div>
     <div class="bg-red-300">03</div>
     <div class="bg-red-400">04</div>
@@ -25,4 +25,8 @@ defineOptions({
     AuthModal
   }
 });
+
+const modal = ref(false);
+
+const onToggleModal = () => (modal.value = true);
 </script>
