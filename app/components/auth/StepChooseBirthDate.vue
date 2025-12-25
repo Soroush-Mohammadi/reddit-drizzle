@@ -115,7 +115,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useAuthFlowStore } from '@/stores/authFlow';
-import { birthdaySchema, type BirthdayInput } from '~~/schema/auth.schema';
+import { birthdaySchema } from '~~/schema/auth.schema';
 
 // Zod schema for birthday
 

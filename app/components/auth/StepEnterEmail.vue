@@ -147,6 +147,7 @@ async function sendEmail() {
 
     if (response.success) {
       auth.next();
+      // this approved when email verfication is done
       auth.setEmail(email.value);
     }
   } catch (err) {

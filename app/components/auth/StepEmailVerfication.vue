@@ -23,7 +23,7 @@
         </svg>
       </button>
 
-      <!-- Skip link -->
+      <!-- Skip link (dev only) -->
       <button
         @click="skipStep"
         class="absolute top-6 right-6 text-gray-400 hover:text-white text-sm font-medium transition"
@@ -36,28 +36,29 @@
         Verify your email
       </h2>
 
-      <!-- Description with email -->
+      <!-- Description -->
       <p class="text-sm text-gray-400 text-center mb-10 px-4">
         Enter the 6-digit code we sent to
         <span class="text-white font-medium">{{ email }}</span>
       </p>
 
-      <!-- Verification code input -->
+      <!-- Code input -->
       <div class="mb-12">
         <input
+          ref="codeInput"
           v-model="code"
           type="text"
           inputmode="numeric"
           pattern="\d*"
           maxlength="6"
-          placeholder="Verification code"
-          class="w-full bg-gray-700 text-white px-6 py-4 rounded-xl text-lg text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-500"
+          placeholder="000000"
+          class="w-full bg-gray-700 text-white px-6 py-4 rounded-xl text-2xl text-center tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-orange-500 placeholder-gray-600"
           :class="{ 'ring-2 ring-red-500': error }"
           :disabled="isLoading"
           @input="handleCodeInput"
         />
 
-        <!-- Success Message -->
+        <!-- Success message -->
         <p
           v-if="success"
           class="text-green-500 text-sm text-center mt-4 font-medium"
@@ -65,13 +66,13 @@
           {{ success }}
         </p>
 
-        <!-- Error Message -->
+        <!-- Error message -->
         <p v-if="error" class="text-red-500 text-sm text-center mt-4">
           {{ error }}
         </p>
       </div>
 
-      <!-- Resend section -->
+      <!-- Resend -->
       <p class="text-center text-sm text-gray-400 mb-12">
         Didn't get an email?
         <button
@@ -87,11 +88,16 @@
         </button>
       </p>
 
-      <!-- Continue / Submit button -->
+      <!-- Submit button -->
       <button
         @click="verifyCode"
         :disabled="isLoading || code.length !== 6"
-        class="w-full bg-gray-700 text-gray-300 font-bold py-4 rounded-full hover:bg-gray-600 transition disabled:opacity-50"
+        class="w-full font-bold py-4 rounded-full transition disabled:opacity-50"
+        :class="
+          code.length === 6 && !isLoading
+            ? 'bg-orange-500 text-white hover:bg-orange-600'
+            : 'bg-gray-700 text-gray-300'
+        "
       >
         {{ isLoading ? 'Verifying...' : 'Continue' }}
       </button>
@@ -109,7 +115,6 @@ import { useAuthFlowStore } from '#imports';
 
 const auth = useAuthFlowStore();
 
-// Get email from store (set in previous signup step)
 const email = computed(() => auth.email || 'your@email.com');
 
 const code = ref('');
@@ -118,10 +123,14 @@ const success = ref<string>('');
 const isLoading = ref(false);
 const resendCountdown = ref(60);
 
+const codeInput = ref<HTMLInputElement | null>(null);
+
 let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
 onMounted(() => {
   startCountdown();
+  // Auto-focus the input when component mounts
+  nextTick(() => codeInput.value?.focus());
 });
 
 onUnmounted(() => {
@@ -139,7 +148,7 @@ function startCountdown() {
 }
 
 function handleCodeInput() {
-  // Only allow digits and limit to 6
+  // Remove any non-digit characters and limit to 6
   code.value = code.value.replace(/\D/g, '').slice(0, 6);
   error.value = '';
   success.value = '';
@@ -155,13 +164,13 @@ async function verifyCode() {
   success.value = '';
   isLoading.value = true;
 
-  const input: VerificationCodeInput = { code: code.value.trim() };
+  const input: VerificationCodeInput = { code: code.value };
 
   const result = verificationCodeSchema.safeParse(input);
 
   if (!result.success) {
     error.value =
-      result.error.issues.at(0)?.message || 'Invalid verification code';
+      result.error.issues[0]?.message || 'Invalid verification code';
     isLoading.value = false;
     return;
   }
@@ -174,7 +183,10 @@ async function verifyCode() {
 
     if (response.success) {
       success.value = 'Email verified successfully!';
-      auth.next(); // Proceed to next step in auth flow
+      // Optional: auto-advance after short delay
+      setTimeout(() => {
+        auth.next();
+      }, 1000);
     } else {
       error.value = response.message || 'Verification failed';
     }
@@ -197,11 +209,11 @@ async function resendCode() {
       body: { email: email.value }
     });
 
-    // Restart countdown
     resendCountdown.value = 60;
     startCountdown();
-    success.value = 'Code resent!';
-  } catch (err) {
+    success.value = 'New code sent!';
+    setTimeout(() => (success.value = ''), 3000);
+  } catch {
     error.value = 'Failed to resend code';
   } finally {
     isLoading.value = false;
@@ -213,7 +225,7 @@ function prevStep() {
 }
 
 function skipStep() {
-  // Warning: skipping verification is insecure – use only for dev/testing
+  // ⚠️ Only for development/testing — remove in production!
   auth.next();
 }
 </script>

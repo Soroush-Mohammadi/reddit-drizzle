@@ -110,7 +110,7 @@
 
         <!-- Continue button -->
         <button
-          @click="onContinue"
+          @click="finalizeSignup"
           class="w-full bg-gray-700 text-gray-300 font-bold py-4 rounded-full hover:bg-gray-600 transition"
           :class="{
             'bg-orange-500 hover:bg-orange-600 text-white':
@@ -127,6 +127,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useAuthFlowStore } from '@/stores/authFlow';
+import { signUp } from '~~/lib/auth-client';
 
 const flow = useAuthFlowStore();
 
@@ -171,7 +172,66 @@ function prevStep() {
   flow.prev();
 }
 
-function onContinue() {
-  flow.finalizeSignup();
+async function finalizeSignup() {
+  try {
+    const response = await $fetch('/api/signup', {
+      method: 'POST',
+      body: {
+        email: flow.email,
+        username: flow.username, // if you added it
+        password: flow.password,
+        interests: flow.interests // ← ALL selections from BOTH steps here
+        // birthday, etc.
+      }
+    });
+
+    if (response.success) {
+      console.log(response);
+
+      handleSignUp();
+
+      // signup the user
+      // refresh the feed
+      // close the modal
+    }
+  } catch (err) {
+    console.log(err);
+  }
+
+  // Success → close modal, log in, etc.
+}
+
+const email = ref('');
+const password = ref('');
+const name = ref('');
+const err = ref('');
+const isLoading = ref(false);
+const success = ref(false);
+
+async function handleSignUp() {
+  err.value = '';
+  success.value = false;
+  isLoading.value = true;
+
+  try {
+    const result = await signUp.email({
+      email: email.value,
+      password: password.value,
+      name: name.value.trim() || email.value.split('@')[0] || 'User' // always provide a string
+    });
+
+    if (result.error) {
+      err.value = result.error.message || 'Sign-up failed. Please try again.';
+      console.error('Sign-up error:', result.error);
+    } else {
+      console.log(result.data);
+      success.value = true;
+    }
+  } catch (unexpectedError) {
+    err.value = 'Network error. Please try again.';
+    console.error('Unexpected error:', unexpectedError);
+  } finally {
+    isLoading.value = false;
+  }
 }
 </script>

@@ -13,10 +13,10 @@ export type EmailInput = z.infer<typeof emailSchema>;
 export const verificationCodeSchema = z.object({
   code: z
     .string()
-    .length(5, { message: 'Code must be exactly 5 digits' })
-    .regex(/^\d{5}$/, { message: 'Code must contain only digits' })
+    .trim()
+    .length(6, { message: 'Code must be exactly 6 digits' })
+    .regex(/^\d+$/, { message: 'Code must contain only digits' })
 });
-
 // Export the inferred TypeScript type
 export type VerificationCodeInput = z.infer<typeof verificationCodeSchema>;
 
