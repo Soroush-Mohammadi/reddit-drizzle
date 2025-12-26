@@ -7,6 +7,8 @@
       <button
         @click="closeModal"
         class="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+        aria-label="Close login modal"
+        type="button"
       >
         <svg
           class="w-6 h-6"
@@ -31,26 +33,28 @@
         understand the Privacy Policy.
       </p>
 
-      <!-- Social buttons (unchanged) -->
+      <!-- Social buttons -->
       <div class="space-y-3 mb-8">
-        <!-- Google, Apple, Phone, Email link buttons remain the same -->
         <button
+          type="button"
           class="w-full bg-white text-gray-900 font-medium py-3 rounded-full flex items-center justify-center gap-3 hover:bg-gray-100 transition"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-            /* Google SVG */
+            <!-- Google SVG -->
           </svg>
           Continue with Google
         </button>
         <button
+          type="button"
           class="w-full bg-white text-gray-900 font-medium py-3 rounded-full flex items-center justify-center gap-3 hover:bg-gray-100 transition"
         >
           <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-            /* Apple SVG */
+            <!-- Apple SVG -->
           </svg>
           Continue with Apple
         </button>
         <button
+          type="button"
           class="w-full bg-white text-gray-900 font-medium py-3 rounded-full flex items-center justify-center gap-3 hover:bg-gray-100 transition"
         >
           <svg
@@ -59,11 +63,12 @@
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            /* Phone SVG */
+            <!-- Phone SVG -->
           </svg>
           Continue with Phone Number
         </button>
         <button
+          type="button"
           class="w-full bg-white text-gray-900 font-medium py-3 rounded-full flex items-center justify-center gap-3 hover:bg-gray-100 transition"
         >
           <svg
@@ -72,7 +77,7 @@
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            /* Email SVG */
+            <!-- Email SVG -->
           </svg>
           Email me a one-time link
         </button>
@@ -88,18 +93,21 @@
         </div>
       </div>
 
-      <!-- Login Form with Zod Validation -->
+      <!-- Login Form -->
       <form @submit.prevent="handleSubmit" class="space-y-4" novalidate>
         <div>
           <input
-            v-model="form.emailOrUsername"
-            type="text"
-            placeholder="Email or username *"
+            ref="emailInput"
+            v-model="form.email"
+            type="email"
+            placeholder="Email *"
+            autocomplete="username"
             class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
-            :class="{ 'ring-2 ring-red-500': errors.emailOrUsername }"
+            :class="{ 'ring-2 ring-red-500': errors.email }"
+            @input="errors.email = ''"
           />
-          <p v-if="errors.emailOrUsername" class="text-red-500 text-xs mt-1">
-            {{ errors.emailOrUsername }}
+          <p v-if="errors.email" class="text-red-500 text-xs mt-1">
+            {{ errors.email }}
           </p>
         </div>
 
@@ -108,8 +116,10 @@
             v-model="form.password"
             type="password"
             placeholder="Password *"
+            autocomplete="current-password"
             class="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             :class="{ 'ring-2 ring-red-500': errors.password }"
+            @input="errors.password = ''"
           />
           <p v-if="errors.password" class="text-red-500 text-xs mt-1">
             {{ errors.password }}
@@ -145,39 +155,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { useAuthFlowStore } from '#imports';
+import { signIn } from '~~/lib/auth-client';
 import { z } from 'zod';
-import {
-  emailSchema,
-  passwordSchema,
-  usernameSchema
-} from '~~/schema/auth.schema'; // Adjust path if needed
+import { emailSchema, passwordSchema } from '~~/schema/auth.schema';
 
 const auth = useAuthFlowStore();
 const nextStep = () => auth.next();
 const closeModal = () => auth.toggleModal(false);
 
+// Focus email input on mount
+const emailInput = ref<HTMLInputElement | null>(null);
+onMounted(() => {
+  emailInput.value?.focus();
+});
+
 // Form state
 const form = reactive({
-  emailOrUsername: '',
+  email: '',
   password: ''
 });
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
-// Combined schema: email OR username + password
+// Schema: email + password only
 const loginSchema = z.object({
-  emailOrUsername: z
-    .union([
-      emailSchema.shape.email, // valid email
-      usernameSchema // valid username
-    ])
-    .refine((val) => val.trim().length > 0, {
-      message: 'Email or username is required'
-    }),
-
+  email: emailSchema.shape.email,
   password: passwordSchema
 });
 
@@ -186,31 +191,36 @@ async function handleSubmit() {
   isSubmitting.value = true;
 
   try {
-    // Validate with Zod
+    // Validate
     loginSchema.parse({
-      emailOrUsername: form.emailOrUsername.trim(),
+      email: form.email.trim(),
       password: form.password
     });
 
-    // If validation passes → proceed with login logic (API call, etc.)
-    console.log('Valid login data:', {
-      emailOrUsername: form.emailOrUsername,
-      password: form.password
+    // API call - now correctly uses email only
+    const { data, error } = await signIn.email({
+      email: form.email.trim(),
+      password: form.password,
+      rememberMe: true
     });
 
-    // Example: call your auth API here
-    // await loginApi(form.emailOrUsername, form.password);
+    if (error) throw error;
 
-    // On success, maybe close modal or redirect
-    // closeModal();
+    // Success
+    closeModal();
   } catch (err: any) {
     if (err instanceof z.ZodError) {
-      // Transform Zod errors into flat object
+      const newErrors: Record<string, string> = {};
       err.issues.forEach((issue) => {
         const path = issue.path.join('.');
-        errors.value[path] = issue.message;
+        if (!newErrors[path]) {
+          newErrors[path] = issue.message;
+        }
       });
+      errors.value = newErrors;
     } else {
+      // General auth error (wrong credentials, etc.)
+      errors.value.password = 'Invalid email or password';
       console.error('Login error:', err);
     }
   } finally {

@@ -26,13 +26,16 @@
     <p v-if="error" class="error">{{ error }}</p>
     <p v-if="success" class="success">Account created successfully!</p>
   </form>
- <div>
- <ul>
+  <div class="flex">
+    <ul>
       <li v-for="title in postTitles" :key="title">
         {{ title }}
       </li>
     </ul>
- </div>
+    <div>
+      <OrganismsUserProfileMenu />
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -58,9 +61,8 @@ const handleSignUp = async () => {
     await signUp.email({
       email: email.value,
       password: password.value,
-      name: name.value || undefined, // Only send name if provided
+      name: name.value || undefined // Only send name if provided
     });
-
   } catch (err) {
     error.value = 'Network error. Please try again.';
     console.error('Sign-up error:', err);
@@ -69,11 +71,11 @@ const handleSignUp = async () => {
   }
 };
 
-const { data, pending, error : myError } = await useFetch('/api/feed')
+const { data, pending, error: myError } = await useFetch('/api/feed');
 
 const postTitles = computed(() => {
-  return data.value?.map(item => item.post.title) || []
-})
+  return data.value?.map((item) => item.post.title) || [];
+});
 </script>
 
 <style scoped>
@@ -87,6 +89,3 @@ const postTitles = computed(() => {
   margin-top: 10px;
 }
 </style>
-
-
-

@@ -1,14 +1,21 @@
 <template>
-    <div class="flex justify-center p-2 relative">
-        <input class="bg-gray-300 rounded-2xl w-[560px] pl-10 py-1" type="text" placeholder="Search reddit">
-       <Icon class="absolute left-5 bottom-3" icon="mingcute:search-line" width="24" height="24" />
-    </div>
+  <div class="relative">
+    <input
+      class="w-full border rounded-4xl text-lg pl-10 h-9"
+      type="text"
+      placeholder="Find Anything"
+    />
+    <Icon
+      class="absolute top-1 left-1"
+      icon="logos:reddit-icon"
+      width="28"
+      height="27"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '@iconify/vue'
+import { Icon } from '@iconify/vue';
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
