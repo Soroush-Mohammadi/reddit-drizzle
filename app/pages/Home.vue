@@ -21,16 +21,15 @@
 
     <OrganismsUserProfileMenu v-if="false" />
   </div>
-  <div class="grid grid-cols-7">
-    <div class="bg-red-100">
+  <div class="grid grid-cols-14 grid-rows-[50px-1fr]">
+    <div class="bg-red-100 col-span-2">
       <TemplatesSideMenu />
     </div>
-    <div class="col-start-3 col-span-3">
+    <div class="col-start-5 col-span-6 border-x p-2 row-start-2">
       <TemplatesMainContent />
       <AuthModal :show="modal" />
     </div>
-    <div class="bg-red-300">03</div>
-    <div class="bg-red-400">04</div>
+    <div class="bg-red-300 col-start-12 col-span-2">03</div>
   </div>
 </template>
 

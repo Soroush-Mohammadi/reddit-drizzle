@@ -1,7 +1,7 @@
 <template>
   <div>
     <button
-      @click="onToggleModal"
+      @click="ToggleModal"
       class="bg-orange-600 rounded-3xl text-white font-medium text-xs py-3 px-5 cursor-pointer"
     >
       Login
@@ -13,7 +13,7 @@
 import { useAuthFlowStore } from '#imports';
 const flow = useAuthFlowStore();
 
-const onToggleModal = () => flow.toggleModal(true);
+const ToggleModal = () => flow.toggleModal(true);
 </script>
 
 <style scoped></style>

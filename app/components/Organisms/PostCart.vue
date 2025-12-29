@@ -1,10 +1,10 @@
 <template>
-  <MoleculesPostHeader />
-  <div v-for="post in posts" :key="post.id">
-    <h1 class="font-bold">{{ post.title }}</h1>
-    <p class="text-sm">{{ post.content }}</p>
-    <img src="https://placehold.co/600x400" alt="" />
-    <div class="flex gap-x-2 my-2">
+  <div class="m-6" v-for="post in posts" :key="post.id">
+    <div>
+      <h1 class="text-xl text-left font-bold">{{ post.title }}</h1>
+      <img class="mt-3 rounded-xl" src="https://placehold.co/1000x600" alt="" />
+    </div>
+    <div class="flex gap-x-2 my-4">
       <div class="flex bg-gray-300 gap-x-1 rounded-xl items-center p-1 px-3">
         <Icon icon="memory:arrow-up-bold" width="18" height="18" />
         <span>{{ post.score }}</span>

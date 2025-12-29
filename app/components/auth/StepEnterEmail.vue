@@ -1,10 +1,13 @@
 <template>
-  <div class="max-h-screen bg-gray-900 flex items-center justify-center px-4">
+  <div class="max-h-screen flex items-center justify-center px-4">
     <div
       class="max-w-md w-full bg-gray-800 rounded-2xl shadow-2xl p-8 relative"
     >
       <!-- Close button -->
-      <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-200">
+      <button
+        @click="closeModal"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-200"
+      >
         <svg
           class="w-6 h-6"
           fill="none"
@@ -154,6 +157,8 @@ async function sendEmail() {
     error.value = err?.data?.message || 'Something went wrong';
   }
 }
+
+const closeModal = () => auth.toggleModal(false);
 
 // Go back to login step
 const prevStep = () => auth.prev();

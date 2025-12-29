@@ -4,9 +4,7 @@
     v-if="modal"
     class="fixed inset-0 bg-black/50 flex justify-center items-center"
   >
-    <div class="bg-white rounded-xl p-6 max-w-2xl">
-      <component :is="currentComponent" />
-    </div>
+    <component :is="currentComponent" />
   </div>
 </template>
 
