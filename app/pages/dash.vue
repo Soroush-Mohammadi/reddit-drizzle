@@ -7,12 +7,14 @@ definePageMeta({
 const flow = useAuthFlowStore();
 </script>
 <template>
-  <div class="col-start-3 col-span-8">
+  <div>
     <!-- Your page content goes here -->
-    <AuthModal :show="flow.modal" />
 
     <div class="border mt-10 rounded-xl flex flex-col items-start">
       <OrganismsPostCart />
+    </div>
+    <div class="absolute">
+      <AuthModal :show="flow.modal" />
     </div>
   </div>
 </template>

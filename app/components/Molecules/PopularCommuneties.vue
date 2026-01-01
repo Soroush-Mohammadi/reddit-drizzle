@@ -3,7 +3,7 @@
     <ul>
       <li
         class="flex space-x-3 items-center mb-4"
-        v-for="item in popularCommunities"
+        v-for="item in communities"
         :key="item.id"
       >
         <div class="bg-orange-500 w-10 h-10 rounded-full"></div>
@@ -17,6 +17,23 @@
 </template>
 
 <script setup>
+const {
+  data: communities,
+  pending,
+  error
+} = await useFetch('/api/getCommunities/');
+
+watch(
+  communities,
+  (newData) => {
+    if (newData) {
+      console.log('Communities loaded:', newData);
+      // Optional: pretty print
+    }
+  },
+  { immediate: true } // logs even if data is already there (e.g., from SSR)
+);
+/*
 const popularCommunities = [
   {
     id: 1,
@@ -44,6 +61,8 @@ const popularCommunities = [
     members: 2852001
   }
 ];
+
+*/
 </script>
 
 <style lang="scss" scoped></style>

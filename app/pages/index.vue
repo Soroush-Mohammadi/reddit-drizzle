@@ -32,9 +32,6 @@
         {{ title }}
       </li>
     </ul>
-    <div>
-      <OrganismsUserProfileMenu />
-    </div>
   </div>
 </template>
 
