@@ -11,6 +11,9 @@ export type EmailInput = z.infer<typeof emailSchema>;
 
 // Schema for the verification code
 export const verificationCodeSchema = z.object({
+  email: z.string().email({
+    message: 'Invalid email address'
+  }),
   code: z
     .string()
     .trim()

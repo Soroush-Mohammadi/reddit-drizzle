@@ -164,9 +164,18 @@ async function verifyCode() {
   success.value = '';
   isLoading.value = true;
 
-  const input: VerificationCodeInput = { code: code.value };
+  const input: VerificationCodeInput = {
+    email: auth.email,
+    code: code.value
+  };
 
   const result = verificationCodeSchema.safeParse(input);
+
+  if (!auth.email) {
+    error.value = 'Email is missing. Please restart signup.';
+    isLoading.value = false;
+    return;
+  }
 
   if (!result.success) {
     error.value =

@@ -113,10 +113,34 @@
       <!-- Continue button (send verification code) -->
       <button
         @click="sendEmail"
-        class="w-full bg-gray-700 text-gray-300 font-bold py-3 rounded-full hover:bg-gray-600 transition disabled:opacity-50"
-        :disabled="!email"
+        class="w-full bg-gray-700 text-gray-300 font-bold py-3 rounded-full hover:bg-gray-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
+        :disabled="!email || isSending"
       >
-        Continue
+        <!-- Spinner -->
+        <svg
+          v-if="isSending"
+          class="w-5 h-5 animate-spin"
+          viewBox="0 0 24 24"
+          fill="none"
+        >
+          <circle
+            class="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            stroke-width="4"
+          />
+          <path
+            class="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+          />
+        </svg>
+
+        <span>
+          {{ isSending ? 'Sending…' : 'Continue' }}
+        </span>
       </button>
     </div>
   </div>
@@ -131,8 +155,10 @@ const auth = useAuthFlowStore();
 
 const email = ref('');
 const error = ref('');
+const isSending = ref(false);
 
 async function sendEmail() {
+  if (isSending.value) return;
   error.value = '';
 
   const result = emailSchema.safeParse({ email: email.value });
@@ -141,6 +167,8 @@ async function sendEmail() {
     error.value = result.error.issues[0].message;
     return;
   }
+
+  isSending.value = true;
 
   try {
     const response = await $fetch('/api/send-code/', {
@@ -155,6 +183,8 @@ async function sendEmail() {
     }
   } catch (err) {
     error.value = err?.data?.message || 'Something went wrong';
+  } finally {
+    isSending.value = false;
   }
 }
 
