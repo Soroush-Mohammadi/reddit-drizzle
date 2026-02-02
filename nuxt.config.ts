@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   css: ['./app/assets/css/main.css'],
   typescript: { typeCheck: false },
+  nitro: {
+    preset: 'vercel'
+  },
   vite: {
     plugins: [tailwindcss()]
   },
