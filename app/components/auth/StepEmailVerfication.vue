@@ -112,6 +112,7 @@ import {
   type VerificationCodeInput
 } from '~~/schema/auth.schema';
 import { useAuthFlowStore } from '#imports';
+import { signUp } from '~~/lib/auth-client';
 
 const auth = useAuthFlowStore();
 
@@ -164,43 +165,61 @@ async function verifyCode() {
   success.value = '';
   isLoading.value = true;
 
-  const input: VerificationCodeInput = {
-    email: auth.email,
-    code: code.value
-  };
-
-  const result = verificationCodeSchema.safeParse(input);
-
+  // 1️⃣ Guard: email must exist
   if (!auth.email) {
     error.value = 'Email is missing. Please restart signup.';
     isLoading.value = false;
     return;
   }
 
-  if (!result.success) {
+  // 2️⃣ Validate input
+  const input: VerificationCodeInput = {
+    email: auth.email,
+    code: code.value
+  };
+
+  const parsed = verificationCodeSchema.safeParse(input);
+
+  if (!parsed.success) {
     error.value =
-      result.error.issues[0]?.message || 'Invalid verification code';
+      parsed.error.issues[0]?.message || 'Invalid verification code';
     isLoading.value = false;
     return;
   }
 
   try {
+    // 3️⃣ Verify code with backend
     const response = await $fetch<VerifyCodeResponse>('/api/verify-code', {
       method: 'POST',
-      body: result.data
+      body: parsed.data
     });
 
-    if (response.success) {
-      success.value = 'Email verified successfully!';
-      // Optional: auto-advance after short delay
-      setTimeout(() => {
-        auth.next();
-      }, 1000);
-    } else {
+    if (!response.success) {
       error.value = response.message || 'Verification failed';
+      return;
     }
+
+    // 4️⃣ Email verified → CREATE USER + SESSION
+    const signUpResult = await signUp.email({
+      email: auth.email,
+      password: auth.password,
+      name: auth.username || auth.email.split('@')[0]
+    });
+
+    if (signUpResult.error) {
+      error.value = signUpResult.error.message || 'Sign-up failed';
+      return;
+    }
+
+    // 5️⃣ Success → move to onboarding
+    success.value = 'Email verified! Setting up your account…';
+
+    setTimeout(() => {
+      auth.next(); // interests step
+    }, 500);
   } catch (err: any) {
-    error.value = err?.data?.statusMessage || 'Invalid or expired code';
+    error.value =
+      err?.data?.statusMessage || 'Invalid or expired verification code';
   } finally {
     isLoading.value = false;
   }

@@ -201,9 +201,6 @@ async function finalizeSignup() {
   // Success → close modal, log in, etc.
 }
 
-const email = ref('');
-const password = ref('');
-const name = ref('');
 const err = ref('');
 const isLoading = ref(false);
 const success = ref(false);
@@ -215,21 +212,21 @@ async function handleSignUp() {
 
   try {
     const result = await signUp.email({
-      email: email.value,
-      password: password.value,
-      name: name.value.trim() || email.value.split('@')[0] || 'User' // always provide a string
+      email: flow.email,
+      password: flow.password,
+      name: flow.username || flow.email.split('@')[0] || 'User'
     });
 
     if (result.error) {
-      err.value = result.error.message || 'Sign-up failed. Please try again.';
-      console.error('Sign-up error:', result.error);
+      err.value = result.error.message || 'Sign-up failed.';
+      console.error(result.error);
     } else {
-      console.log(result.data);
       success.value = true;
+      console.log(result.data);
     }
-  } catch (unexpectedError) {
+  } catch (e) {
     err.value = 'Network error. Please try again.';
-    console.error('Unexpected error:', unexpectedError);
+    console.error(e);
   } finally {
     isLoading.value = false;
   }
