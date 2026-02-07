@@ -90,7 +90,7 @@
 
       <!-- Submit button -->
       <button
-        @click="verifyCode"
+        @click="auth.next()"
         :disabled="isLoading || code.length !== 6"
         class="w-full font-bold py-4 rounded-full transition disabled:opacity-50"
         :class="
