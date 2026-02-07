@@ -107,6 +107,7 @@ import { ref, computed } from 'vue';
 import { useAuthFlowStore } from '@/stores/authFlow';
 import { useUsernameSuggestion } from '@@/composables/useUsernameSuggestion';
 import { usernameSchema, passwordSchema } from '~~/schema/auth.schema';
+import { signUp } from '~~/lib/auth-client';
 
 const flow = useAuthFlowStore();
 
@@ -178,25 +179,41 @@ const isFormValid = computed(() => {
   );
 });
 
-function onContinue() {
+async function onContinue() {
   if (!isFormValid.value) return;
 
-  // Final validation before proceeding
+  usernameError.value = '';
+  passwordError.value = '';
+
   const usernameResult = usernameSchema.safeParse(username.value.trim());
   const passwordResult = passwordSchema.safeParse(password.value);
 
-  if (!usernameResult.success || !passwordResult.success) {
-    // Should not happen due to real-time validation, but safe guard
-    return;
-  }
+  if (!usernameResult.success || !passwordResult.success) return;
 
-  // Save to store
-
-  flow.setUsername(username.value);
+  // Save credentials in flow
+  flow.setUsername(username.value.trim());
   flow.setPassword(password.value);
 
-  // Proceed
-  flow.next();
+  try {
+    const result = await signUp.email({
+      email: flow.email,
+      password: flow.password,
+      name: flow.username
+    });
+
+    if (result.error) {
+      passwordError.value = result.error.message || 'Sign-up failed';
+      return;
+    }
+
+    // Clear password from memory after signup
+    flow.setPassword('');
+
+    // Move to onboarding
+    flow.next();
+  } catch (err) {
+    passwordError.value = 'Network error. Please try again.';
+  }
 }
 
 function prevStep() {

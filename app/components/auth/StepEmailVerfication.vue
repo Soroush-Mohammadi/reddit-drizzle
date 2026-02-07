@@ -112,7 +112,6 @@ import {
   type VerificationCodeInput
 } from '~~/schema/auth.schema';
 import { useAuthFlowStore } from '#imports';
-import { signUp } from '~~/lib/auth-client';
 
 const auth = useAuthFlowStore();
 
