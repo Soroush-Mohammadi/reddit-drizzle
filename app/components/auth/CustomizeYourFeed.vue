@@ -188,8 +188,6 @@ async function finalizeSignup() {
     if (response.success) {
       console.log(response);
 
-      handleSignUp();
-
       // signup the user
       // refresh the feed
       // close the modal
@@ -199,36 +197,5 @@ async function finalizeSignup() {
   }
 
   // Success → close modal, log in, etc.
-}
-
-const err = ref('');
-const isLoading = ref(false);
-const success = ref(false);
-
-async function handleSignUp() {
-  err.value = '';
-  success.value = false;
-  isLoading.value = true;
-
-  try {
-    const result = await signUp.email({
-      email: flow.email,
-      password: flow.password,
-      name: flow.username || flow.email.split('@')[0] || 'User'
-    });
-
-    if (result.error) {
-      err.value = result.error.message || 'Sign-up failed.';
-      console.error(result.error);
-    } else {
-      success.value = true;
-      console.log(result.data);
-    }
-  } catch (e) {
-    err.value = 'Network error. Please try again.';
-    console.error(e);
-  } finally {
-    isLoading.value = false;
-  }
 }
 </script>
