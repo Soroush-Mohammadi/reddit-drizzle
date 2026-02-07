@@ -165,14 +165,18 @@ async function verifyCode() {
   success.value = '';
   isLoading.value = true;
 
-  // 1️⃣ Guard: email must exist
   if (!auth.email) {
     error.value = 'Email is missing. Please restart signup.';
     isLoading.value = false;
     return;
   }
 
-  // 2️⃣ Validate input
+  if (!auth.password) {
+    error.value = 'Password missing. Please restart signup.';
+    isLoading.value = false;
+    return;
+  }
+
   const input: VerificationCodeInput = {
     email: auth.email,
     code: code.value
@@ -188,7 +192,7 @@ async function verifyCode() {
   }
 
   try {
-    // 3️⃣ Verify code with backend
+    // 1️⃣ verify code
     const response = await $fetch<VerifyCodeResponse>('/api/verify-code', {
       method: 'POST',
       body: parsed.data
@@ -199,7 +203,7 @@ async function verifyCode() {
       return;
     }
 
-    // 4️⃣ Email verified → CREATE USER + SESSION
+    // 2️⃣ sign up user
     const signUpResult = await signUp.email({
       email: auth.email,
       password: auth.password,
@@ -211,38 +215,18 @@ async function verifyCode() {
       return;
     }
 
-    // 5️⃣ Success → move to onboarding
-    success.value = 'Email verified! Setting up your account…';
+    // 3️⃣ success → move to onboarding
+    success.value = 'Account created successfully!';
+
+    // optional: clear sensitive data
+    auth.password = '';
 
     setTimeout(() => {
-      auth.next(); // interests step
-    }, 500);
+      auth.next();
+    }, 600);
   } catch (err: any) {
     error.value =
       err?.data?.statusMessage || 'Invalid or expired verification code';
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function resendCode() {
-  if (resendCountdown.value > 0) return;
-
-  isLoading.value = true;
-  error.value = '';
-
-  try {
-    await $fetch('/api/send-code', {
-      method: 'POST',
-      body: { email: email.value }
-    });
-
-    resendCountdown.value = 60;
-    startCountdown();
-    success.value = 'New code sent!';
-    setTimeout(() => (success.value = ''), 3000);
-  } catch {
-    error.value = 'Failed to resend code';
   } finally {
     isLoading.value = false;
   }
