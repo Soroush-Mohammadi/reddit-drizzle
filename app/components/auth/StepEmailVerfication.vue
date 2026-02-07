@@ -171,12 +171,6 @@ async function verifyCode() {
     return;
   }
 
-  if (!auth.password) {
-    error.value = 'Password missing. Please restart signup.';
-    isLoading.value = false;
-    return;
-  }
-
   const input: VerificationCodeInput = {
     email: auth.email,
     code: code.value
@@ -192,7 +186,6 @@ async function verifyCode() {
   }
 
   try {
-    // 1️⃣ verify code
     const response = await $fetch<VerifyCodeResponse>('/api/verify-code', {
       method: 'POST',
       body: parsed.data
@@ -203,27 +196,12 @@ async function verifyCode() {
       return;
     }
 
-    // 2️⃣ sign up user
-    const signUpResult = await signUp.email({
-      email: auth.email,
-      password: auth.password,
-      name: auth.username || auth.email.split('@')[0]
-    });
-
-    if (signUpResult.error) {
-      error.value = signUpResult.error.message || 'Sign-up failed';
-      return;
-    }
-
-    // 3️⃣ success → move to onboarding
-    success.value = 'Account created successfully!';
-
-    // optional: clear sensitive data
-    auth.password = '';
+    // ✅ Code is valid → move to next step
+    success.value = 'Email verified!';
 
     setTimeout(() => {
       auth.next();
-    }, 600);
+    }, 500);
   } catch (err: any) {
     error.value =
       err?.data?.statusMessage || 'Invalid or expired verification code';
