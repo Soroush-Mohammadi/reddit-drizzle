@@ -88,10 +88,9 @@
         </button>
       </p>
 
-      <!-- Submit button -->
       <button
-        @click="auth.next()"
         :disabled="isLoading || code.length !== 6"
+        @click="verifyCode"
         class="w-full font-bold py-4 rounded-full transition disabled:opacity-50"
         :class="
           code.length === 6 && !isLoading
@@ -216,5 +215,9 @@ function prevStep() {
 function skipStep() {
   // ⚠️ Only for development/testing — remove in production!
   auth.next();
+}
+
+function resendCode() {
+  console.log('resendcode');
 }
 </script>

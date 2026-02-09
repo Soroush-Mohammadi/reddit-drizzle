@@ -27,7 +27,9 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
 
-const { data: posts } = await useFetch('/api/posts');
+const { data: posts } = await useFetch('/api/feed', {
+  key: 'feed'
+});
 </script>
 
 <style scoped></style>

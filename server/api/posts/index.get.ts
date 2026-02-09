@@ -1,5 +1,5 @@
 import { db } from '~~/src/db';
-import { posts, postVotes, comments } from '~~/src/db/schema';
+import { posts, postVotes, comments, communities } from '~~/src/db/schema';
 import { eq, sql } from 'drizzle-orm';
 
 export default defineEventHandler(async () => {
@@ -10,6 +10,12 @@ export default defineEventHandler(async () => {
       content: posts.content,
       createdAt: posts.createdAt,
 
+      community: {
+        id: communities.id,
+        name: communities.name,
+        slug: communities.slug
+      },
+
       // Score
       score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`,
 
@@ -17,9 +23,10 @@ export default defineEventHandler(async () => {
       commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`
     })
     .from(posts)
+    .leftJoin(communities, eq(posts.communityId, communities.id))
     .leftJoin(postVotes, eq(posts.id, postVotes.postId))
     .leftJoin(comments, eq(posts.id, comments.postId))
-    .groupBy(posts.id);
+    .groupBy(posts.id, communities.id);
 
   return allPosts;
 });

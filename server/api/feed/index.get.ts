@@ -1,60 +1,106 @@
 // server/api/feed.get.ts
-import { desc, eq, sql, count } from 'drizzle-orm'
-import { db } from '~~/src/db/index' // your drizzle instance path
-import { posts, communities, user, postVotes, comments } from '~~/src/db/schema'
-import { auth } from '~~/lib/auth' 
+import { desc, eq, inArray, sql } from 'drizzle-orm';
+import { db } from '~~/src/db/index';
+import {
+  posts,
+  communities,
+  user,
+  postVotes,
+  comments,
+  userInterests,
+  communityInterests
+} from '~~/src/db/schema';
+import { auth } from '~~/lib/auth';
 
 export default defineEventHandler(async (event) => {
-  // Optional: get current user if logged in (for showing their vote)
-  let currentUserId: string | null = null
-  try {
-    const session = await auth.api.getSession(event) // Better-Auth helper
-    currentUserId = session?.user?.id || null
-  } catch {
-    // not logged in → fine
-  }
+  let currentUserId: string | null = null;
 
-  const results = await db
-    .select({
-      post: {
+  try {
+    const session = await auth.api.getSession(event);
+    currentUserId = session?.user?.id || null;
+  } catch {}
+
+  // reusable base query
+  const baseQuery = () =>
+    db
+      .select({
         id: posts.id,
         title: posts.title,
         content: posts.content,
         createdAt: posts.createdAt,
-        updatedAt: posts.updatedAt,
-        authorId: posts.authorId,
-        communityId: posts.communityId,
-      },
+
+        community: {
+          id: communities.id,
+          name: communities.name,
+          slug: communities.slug
+        },
+
+        author: {
+          name: user.name
+        },
+
+        score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`,
+        commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`
+      })
+      .from(posts)
+      .leftJoin(communities, eq(communities.id, posts.communityId))
+      .leftJoin(user, eq(user.id, posts.authorId))
+      .leftJoin(postVotes, eq(postVotes.postId, posts.id))
+      .leftJoin(comments, eq(comments.postId, posts.id))
+      .groupBy(posts.id, communities.id, user.id);
+
+  // Case 1 — no user
+  if (!currentUserId) {
+    return baseQuery().orderBy(desc(posts.createdAt)).limit(25);
+  }
+
+  // load interests
+  const interests = await db
+    .select({ id: userInterests.interestId })
+    .from(userInterests)
+    .where(eq(userInterests.userId, currentUserId));
+
+  const interestIds = interests.map((i) => i.id);
+
+  // Case 2 — user without interests
+  if (!interestIds.length) {
+    return baseQuery().orderBy(desc(posts.createdAt)).limit(25);
+  }
+
+  // Case 3 — personalized feed
+  const feed = await db
+    .select({
+      id: posts.id,
+      title: posts.title,
+      content: posts.content,
+      createdAt: posts.createdAt,
+
       community: {
+        id: communities.id,
         name: communities.name,
-        slug: communities.slug,
+        slug: communities.slug
       },
+
       author: {
-        name: user.name,
-        image: user.image,
+        name: user.name
       },
-      voteCount: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`.mapWith(Number),
-      userVote: postVotes.value, // will be null if no vote
-      commentCount: count(comments.id).mapWith(Number),
+
+      score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`,
+      commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`
     })
     .from(posts)
     .leftJoin(communities, eq(communities.id, posts.communityId))
-    .leftJoin(user, eq(user.id, posts.authorId))
-    .leftJoin(postVotes, eq(postVotes.postId, posts.id)) // all votes
-    .leftJoin(comments, eq(comments.postId, posts.id))
-    .groupBy(
-      posts.id,
-      communities.id,
-      communities.name,
-      communities.slug,
-      user.id,
-      user.name,
-      user.image,
-      postVotes.value
+    .leftJoin(
+      communityInterests,
+      eq(communityInterests.communityId, communities.id)
     )
-    .orderBy(desc(posts.createdAt)) // New first
-    // .orderBy(sql`voteCount DESC, ${posts.createdAt} DESC`) // Hot-like
-    .limit(50)
+    .leftJoin(user, eq(user.id, posts.authorId))
+    .leftJoin(postVotes, eq(postVotes.postId, posts.id))
+    .leftJoin(comments, eq(comments.postId, posts.id))
+    .where(inArray(communityInterests.interestId, interestIds))
+    .groupBy(posts.id, communities.id, user.id)
+    .orderBy(desc(posts.createdAt))
+    .limit(50);
 
-  return results
-})
+  return feed;
+});

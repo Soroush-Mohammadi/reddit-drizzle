@@ -4,8 +4,8 @@ import { defineStore } from 'pinia';
 export const useAuthFlowStore = defineStore('authFlow', () => {
   // ---- STATE ----
   const step = ref(1);
-
-  const email = ref('');
+  // temporary
+  const email = ref('test@mail.com');
   const username = ref('');
   const password = ref('');
   const birthDate = ref('');

@@ -127,7 +127,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useAuthFlowStore } from '@/stores/authFlow';
-import { signUp } from '~~/lib/auth-client';
 
 const flow = useAuthFlowStore();
 
@@ -174,28 +173,26 @@ function prevStep() {
 
 async function finalizeSignup() {
   try {
-    const response = await $fetch('/api/signup', {
+    await $fetch('/api/onboarding', {
       method: 'POST',
       body: {
-        email: flow.email,
-        username: flow.username, // if you added it
-        password: flow.password,
-        interests: flow.interests // ← ALL selections from BOTH steps here
-        // birthday, etc.
+        interests: flow.interests
+        // birthday: flow.birthday,
+        // gender: flow.gender
       }
     });
 
-    if (response.success) {
-      console.log(response);
+    // refresh personalized feed
+    await refreshNuxtData('feed');
 
-      // signup the user
-      // refresh the feed
-      // close the modal
-    }
+    // go to homepage
+    await navigateTo('/');
   } catch (err) {
-    console.log(err);
+    console.error(err);
   }
+}
 
-  // Success → close modal, log in, etc.
+async function personalize() {
+  console.log(flow.interests);
 }
 </script>

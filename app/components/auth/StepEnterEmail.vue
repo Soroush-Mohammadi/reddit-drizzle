@@ -110,9 +110,8 @@
         </span>
       </p>
 
-      <!-- Continue button (send verification code) -->
       <button
-        @click="auth.next()"
+        @click="sendEmail"
         class="w-full bg-gray-700 text-gray-300 font-bold py-3 rounded-full hover:bg-gray-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
         :disabled="!email || isSending"
       >
