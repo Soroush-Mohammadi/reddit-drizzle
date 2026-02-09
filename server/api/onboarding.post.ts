@@ -1,7 +1,8 @@
 // server/api/onboarding.post.ts
 import { db } from '~~/src/db';
-import { userInterests } from '~~/src/db/schema';
+import { userInterests, interests } from '~~/src/db/schema';
 import { auth } from '~~/lib/auth';
+import { inArray } from 'drizzle-orm';
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession(event);
@@ -9,14 +10,25 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event);
 
-  const rows = body.interests.map((slug: string) => ({
+  if (!body.interests?.length) {
+    return { success: true };
+  }
+
+  // Convert slugs → IDs
+  const interestRows = await db
+    .select({
+      id: interests.id,
+      slug: interests.slug
+    })
+    .from(interests)
+    .where(inArray(interests.slug, body.interests));
+
+  const rows = interestRows.map((interest) => ({
     userId: session.user.id,
-    interestSlug: slug
+    interestId: interest.id
   }));
 
-  if (rows.length) {
-    await db.insert(userInterests).values(rows);
-  }
+  await db.insert(userInterests).values(rows);
 
   return { success: true };
 });
