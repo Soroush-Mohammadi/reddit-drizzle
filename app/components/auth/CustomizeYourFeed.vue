@@ -172,23 +172,22 @@ function prevStep() {
 }
 
 async function finalizeSignup() {
+  console.log('Submitting onboarding...', flow.interests);
+
   try {
-    await $fetch('/api/onboarding', {
+    const res = await $fetch('/api/onboarding', {
       method: 'POST',
       body: {
         interests: flow.interests
-        // birthday: flow.birthday,
-        // gender: flow.gender
       }
     });
 
-    // refresh personalized feed
-    await refreshNuxtData('feed');
+    console.log('Onboarding saved:', res);
 
-    // go to homepage
+    await refreshNuxtData('feed');
     await navigateTo('/');
   } catch (err) {
-    console.error(err);
+    console.error('Onboarding failed:', err);
   }
 }
 
