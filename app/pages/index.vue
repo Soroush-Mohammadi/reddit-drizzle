@@ -1,88 +1,20 @@
+<script setup>
+import { useAuthFlowStore } from '@/stores/authFlow';
+definePageMeta({
+  layout: 'dashboard' // matches the filename without .vue
+});
+
+const flow = useAuthFlowStore();
+</script>
 <template>
-  <form @submit.prevent="handleSignUp">
-    <input
-      type="email"
-      v-model="email"
-      placeholder="Email"
-      required
-      :disabled="isLoading"
-    />
-    <input
-      type="password"
-      v-model="password"
-      placeholder="Password"
-      required
-      :disabled="isLoading"
-    />
-    <input
-      type="text"
-      v-model="name"
-      placeholder="Name (optional)"
-      :disabled="isLoading"
-    />
-    <button type="submit" :disabled="isLoading">
-      {{ isLoading ? 'Signing Up...' : 'Sign Up' }}
-    </button>
-    <p v-if="error" class="error">{{ error }}</p>
-    <p v-if="success" class="success">Account created successfully!</p>
-  </form>
-  <div class="flex">
-    <ul>
-      <li v-for="title in postTitles" :key="title">
-        {{ title }}
-      </li>
-    </ul>
+  <div>
+    <!-- Your page content goes here -->
+
+    <div class="border mt-10 rounded-xl flex flex-col items-start">
+      <OrganismsPostCart />
+    </div>
+    <div class="absolute">
+      <AuthModal :show="flow.modal" />
+    </div>
   </div>
 </template>
-
-<script setup>
-import { ref } from 'vue';
-import { signUp } from '~~/lib/auth-client';
-
-// Component state
-const email = ref('');
-const password = ref('');
-const name = ref('');
-const error = ref('');
-const isLoading = ref(false);
-const success = ref(false);
-
-// Handle sign-up
-const handleSignUp = async () => {
-  // Reset previous states
-  error.value = '';
-  success.value = false;
-  isLoading.value = true;
-
-  try {
-    await signUp.email({
-      email: email.value,
-      password: password.value,
-      name: name.value || undefined // Only send name if provided
-    });
-  } catch (err) {
-    error.value = 'Network error. Please try again.';
-    console.error('Sign-up error:', err);
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const { data, pending, error: myError } = await useFetch('/api/feed');
-
-const postTitles = computed(() => {
-  return data.value?.map((item) => item.post.title) || [];
-});
-</script>
-
-<style scoped>
-.error {
-  color: red;
-  margin-top: 10px;
-}
-
-.success {
-  color: green;
-  margin-top: 10px;
-}
-</style>
