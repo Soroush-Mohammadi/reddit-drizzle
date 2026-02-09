@@ -1,10 +1,10 @@
 // server/api/feed.get.ts
-import { desc, eq, inArray, sql } from 'drizzle-orm';
+
+import { desc, eq, inArray, sql, count } from 'drizzle-orm';
 import { db } from '~~/src/db/index';
 import {
   posts,
   communities,
-  user,
   postVotes,
   comments,
   userInterests,
@@ -20,8 +20,12 @@ export default defineEventHandler(async (event) => {
     currentUserId = session?.user?.id || null;
   } catch {}
 
-  // reusable base query
-  const baseQuery = () =>
+  /*
+   --------------------------------------------------
+   Fallback feed (used when no user OR no interests)
+   --------------------------------------------------
+  */
+  const getFallbackFeed = () =>
     db
       .select({
         id: posts.id,
@@ -35,26 +39,33 @@ export default defineEventHandler(async (event) => {
           slug: communities.slug
         },
 
-        author: {
-          name: user.name
-        },
-
-        score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`,
-        commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`
+        score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`.mapWith(
+          Number
+        ),
+        commentCount: count(comments.id).mapWith(Number)
       })
       .from(posts)
       .leftJoin(communities, eq(communities.id, posts.communityId))
-      .leftJoin(user, eq(user.id, posts.authorId))
       .leftJoin(postVotes, eq(postVotes.postId, posts.id))
       .leftJoin(comments, eq(comments.postId, posts.id))
-      .groupBy(posts.id, communities.id, user.id);
+      .groupBy(posts.id, communities.id)
+      .orderBy(desc(posts.createdAt))
+      .limit(25);
 
-  // Case 1 — no user
+  /*
+   ------------------------
+   Case 1: no logged-in user
+   ------------------------
+  */
   if (!currentUserId) {
-    return baseQuery().orderBy(desc(posts.createdAt)).limit(25);
+    return getFallbackFeed();
   }
 
-  // load interests
+  /*
+   ------------------------
+   Load user interests
+   ------------------------
+  */
   const interests = await db
     .select({ id: userInterests.interestId })
     .from(userInterests)
@@ -62,13 +73,21 @@ export default defineEventHandler(async (event) => {
 
   const interestIds = interests.map((i) => i.id);
 
-  // Case 2 — user without interests
+  /*
+   ------------------------
+   Case 2: user has no interests
+   ------------------------
+  */
   if (!interestIds.length) {
-    return baseQuery().orderBy(desc(posts.createdAt)).limit(25);
+    return getFallbackFeed();
   }
 
-  // Case 3 — personalized feed
-  const feed = await db
+  /*
+   ------------------------
+   Personalized feed
+   ------------------------
+  */
+  const results = await db
     .select({
       id: posts.id,
       title: posts.title,
@@ -81,12 +100,8 @@ export default defineEventHandler(async (event) => {
         slug: communities.slug
       },
 
-      author: {
-        name: user.name
-      },
-
-      score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`,
-      commentCount: sql<number>`COALESCE(COUNT(${comments.id}), 0)`
+      score: sql<number>`COALESCE(SUM(${postVotes.value}), 0)`.mapWith(Number),
+      commentCount: count(comments.id).mapWith(Number)
     })
     .from(posts)
     .leftJoin(communities, eq(communities.id, posts.communityId))
@@ -94,13 +109,12 @@ export default defineEventHandler(async (event) => {
       communityInterests,
       eq(communityInterests.communityId, communities.id)
     )
-    .leftJoin(user, eq(user.id, posts.authorId))
     .leftJoin(postVotes, eq(postVotes.postId, posts.id))
     .leftJoin(comments, eq(comments.postId, posts.id))
     .where(inArray(communityInterests.interestId, interestIds))
-    .groupBy(posts.id, communities.id, user.id)
+    .groupBy(posts.id, communities.id)
     .orderBy(desc(posts.createdAt))
     .limit(50);
 
-  return feed;
+  return results;
 });
