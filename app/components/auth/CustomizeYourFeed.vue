@@ -184,14 +184,9 @@ async function finalizeSignup() {
 
     console.log('Onboarding saved:', res);
 
-    await refreshNuxtData('feed');
-    await navigateTo('/');
+    window.location.href = '/';
   } catch (err) {
     console.error('Onboarding failed:', err);
   }
-}
-
-async function personalize() {
-  console.log(flow.interests);
 }
 </script>
