@@ -39,15 +39,8 @@ export default defineEventHandler(async (event) => {
     await sendVerificationEmail(email, code);
 
     return { success: true };
-  } catch (error) {
-    // Log the error in production (you can use console.error or a logger)
-    console.error('Verification email sending failed:', error);
-
-    // Don't expose internal errors to the client
-    throw createError({
-      statusCode: 500,
-      statusMessage:
-        'Failed to send verification email. Please try again later.'
-    });
+  } catch (error: any) {
+    console.error('MAILERSEND ERROR:', error?.response?.body || error);
+    throw error;
   }
 });
