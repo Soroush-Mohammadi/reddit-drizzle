@@ -1,35 +1,16 @@
 <template>
-  <ul>
-    <li class="flex justify-between">
-      <slot name="title">
-        <span>header</span>
-      </slot>
-      <Icon
-        icon="material-symbols:arrow-drop-down-rounded"
-        width="24"
-        height="24"
-        @click="toggleMenu"
-      />
-    </li>
-    <ul class="flex flex-col gap-y-1 list-none" v-if="showMenu">
-      <li v-for="item in subItems" :key="item">{{ item.title }}</li>
-    </ul>
-  </ul>
+  <div class="flex flex-col gap-y-1">
+    <div
+      class="flex items-center justify-between text-xs font-semibold text-gray-500 px-3"
+    >
+      <span>{{ title }}</span>
+      <Icon icon="material-symbols:expand-more-rounded" />
+    </div>
+    <slot />
+  </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  subItems: {
-    type: Array,
-
-    default: () => [] // Good fallback
-  }
-});
+<script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { ref } from 'vue';
-
-const subMenu = ['item-1', 'item-2', 'item-3'];
-const showMenu = ref(false);
-
-const toggleMenu = () => (showMenu.value = !showMenu.value);
+defineProps<{ title: string }>();
 </script>

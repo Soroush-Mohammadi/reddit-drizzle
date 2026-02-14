@@ -1,7 +1,9 @@
 <template>
   <div class="flex min-h-screen flex-col">
     <!-- ================= Header ================= -->
-    <header class="flex h-20 items-center gap-4 px-4 text-white">
+    <header
+      class="flex border-b h-16 items-center gap-4 px-4 sticky top-0 bg-white"
+    >
       <!-- Toggle button (mobile + desktop) -->
 
       <!-- Logo -->
@@ -29,12 +31,12 @@
 
     <!-- Main content -->
     <main
-      class="grid grid-cols-17 transform transition-all duration-300 bg-red-400"
+      class="grid grid-cols-17 transform transition-all duration-300"
       :class="{
         'lg:-translate-x-65': !isSidebarOpen
       }"
     >
-      <aside class="col-span-3 border">
+      <aside class="col-span-3 border-r h-screen sticky left-0 top-16">
         <TemplatesSideMenu @toggle-side-menu="toggleSidebar" />
       </aside>
       <div

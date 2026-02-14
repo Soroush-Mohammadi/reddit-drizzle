@@ -10,7 +10,7 @@ const flow = useAuthFlowStore();
   <div>
     <!-- Your page content goes here -->
 
-    <div class="border mt-10 rounded-xl flex flex-col items-start">
+    <div class="mt-10">
       <OrganismsPostCart />
     </div>
     <div class="absolute">
