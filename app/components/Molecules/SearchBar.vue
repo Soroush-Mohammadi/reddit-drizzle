@@ -1,9 +1,8 @@
 <template>
   <div class="relative">
     <input
-      class="w-full border text-black border-gray-500 rounded-4xl text-lg pl-10 h-10"
+      class="w-full border text-black border-gray-500 rounded-4xl text-xs pl-10 h-10"
       type="text"
-      placeholder="Find Anything"
     />
     <Icon
       class="absolute top-2 left-1"

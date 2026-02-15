@@ -1,9 +1,10 @@
 <template>
-  <div class="max-w-2xl mx-auto space-y-6">
+  <div class="max-w-2xl lg:max-w-max mx-auto space-y-6">
     <div
-      v-for="post in posts"
+      v-for="(post, indx) in posts"
       :key="post.id"
       class="bg-white rounded-2xl shadow-sm border p-4"
+      @click="enterPostPage(indx)"
     >
       <!-- Header -->
       <div class="flex items-center justify-between text-sm text-gray-500">
@@ -65,8 +66,16 @@
 
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { useRouter } from 'vue-router';
 
 const { data: posts } = await useFetch('/api/feed', {
   key: 'feed'
 });
+
+const router = useRouter();
+
+const enterPostPage = (index) =>
+  router.push(
+    `/r/${posts.value[index]?.community?.slug}/post/${posts.value[index]?.id}`
+  );
 </script>

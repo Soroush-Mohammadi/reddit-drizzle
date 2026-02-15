@@ -8,6 +8,8 @@ import {
   boolean
 } from 'drizzle-orm/pg-core';
 
+import { relations } from 'drizzle-orm';
+
 export const usersTable = pgTable('users', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 255 }),
@@ -89,6 +91,10 @@ export const communities = pgTable('communities', {
     .references(() => user.id, { onDelete: 'cascade' })
 });
 
+export const communitiesRelations = relations(communities, ({ many }) => ({
+  posts: many(posts)
+}));
+
 export const communitySubscriptions = pgTable('community_subscriptions', {
   id: serial('id').primaryKey(),
   userId: text('user_id')
@@ -114,6 +120,20 @@ export const posts = pgTable('posts', {
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  community: one(communities, {
+    fields: [posts.communityId],
+    references: [communities.id]
+  }),
+
+  author: one(user, {
+    fields: [posts.authorId],
+    references: [user.id]
+  }),
+
+  comments: many(comments)
+}));
+
 export const comments = pgTable('comments', {
   id: serial('id').primaryKey(),
   content: text('content').notNull(),
@@ -126,6 +146,18 @@ export const comments = pgTable('comments', {
   parentId: integer('parent_id').references(() => comments.id), // optional nested comments
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  post: one(posts, {
+    fields: [comments.postId],
+    references: [posts.id]
+  }),
+
+  author: one(user, {
+    fields: [comments.authorId],
+    references: [user.id]
+  })
+}));
 
 export const postVotes = pgTable('post_votes', {
   id: serial('id').primaryKey(),
