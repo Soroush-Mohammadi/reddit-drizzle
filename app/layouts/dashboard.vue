@@ -6,12 +6,12 @@
     >
       <!-- Toggle button (mobile + desktop) -->
 
-      <div>
+      <div class="xl:hidden">
         <Icon icon="material-symbols:menu-rounded" width="24" height="24" />
       </div>
 
       <!-- Logo -->
-      <div class="w-60 hidden lg:block">
+      <div class="hidden lg:block xl:justify-self-start ml-3 xl:ml-0">
         <AtomsLogo />
       </div>
 
@@ -35,18 +35,18 @@
 
     <!-- Main content -->
     <main
-      class="grid grid-cols-17 transform transition-all duration-300"
+      class="grid grid-cols-12 transform transition-all duration-300"
       :class="{
         'lg:-translate-x-65': !isSidebarOpen
       }"
     >
       <aside
-        class="hidden md:col-span-3 border-r h-screen sticky left-0 top-16"
+        class="hidden md:col-start-1 xl:block xl:col-start-1 xl:col-span-2 border-r h-screen sticky left-0 top-16"
       >
         <TemplatesSideMenu @toggle-side-menu="toggleSidebar" />
       </aside>
       <div
-        class="col-start-1 col-end-18 lg:col-start-1 lg:col-span-11 transform transition-all duration-300"
+        class="col-start-1 col-end-18 md:col-span-12 lg:col-start-1 lg:col-span-7 xl:col-start-4 xl:col-span-6 transform transition-all duration-300"
         :class="{
           'lg:col-start-7 lg:col-span-8': !isSidebarOpen
         }"
